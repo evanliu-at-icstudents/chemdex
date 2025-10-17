@@ -215,8 +215,8 @@ function computeElectronConfig(Z) {
     42: "[Kr] 4d5 5s1",       // Mo
     44: "[Kr] 4d7 5s1",       // Ru
     45: "[Kr] 4d8 5s1",       // Rh
-    46: "[Pd] 4d10",          // Pd
-    47: "[Ag] 4d10 5s1",      // Ag
+    46: "[Kr] 4d10",          // Pd
+    47: "[Kr] 4d10 5s1",      // Ag
     57: "[Xe] 5d1 6s2",       // La
     58: "[Xe] 4f1 5d1 6s2",   // Ce
     64: "[Xe] 4f7 5d1 6s2",   // Gd
@@ -240,7 +240,27 @@ function computeElectronConfig(Z) {
     remaining -= fill;
   }
   const full = configParts.join(" ");
-  return makeNobleGasNotation(Z, full);
+    let result = makeNobleGasNotation(Z, full);
+
+    result = result.replace(
+      /\[([A-Za-z]+)\](.*)/,
+      (_, noble, rest) => {
+        const parts = rest.trim().split(/\s+/);
+        const order = { s: 1, p: 2, d: 3, f: 4 };
+        parts.sort((a, b) => {
+          const ma = a.match(/(\d+)([spdf])/);
+          const mb = b.match(/(\d+)([spdf])/);
+          if (!ma || !mb) return 0;
+          const na = parseInt(ma[1]);
+          const nb = parseInt(mb[1]);
+          if (na !== nb) return na - nb;
+          return order[ma[2]] - order[mb[2]];
+        });
+        return `[${noble}] ${parts.join(" ")}`;
+      }
+    );
+
+return result.trim();
 
   function makeNobleGasNotation(Z, full) {
     const nearest = nobleGases.filter(([num]) => num < Z)
